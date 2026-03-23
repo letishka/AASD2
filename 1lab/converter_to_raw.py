@@ -1,56 +1,66 @@
-# для добычи информации изображений
+import os
+import struct
 from PIL import Image
 
-# для записи заголовка
-import struct
+def convert_to_myraw(file_way, Ms=None, Mc=None):
+    """
+    Конвертирует изображение в собственный raw-формат (.myraw).
+    Заголовок (9 байт):
+      - тип (1 байт): 0 – ч/б, 1 – оттенки серого, 2 – цветное
+      - ширина (2 байта, little-endian)
+      - высота (2 байта, little-endian)
+      - Ms (2 байта, little-endian) – размер символа в битах
+      - Mc (2 байта, little-endian) – размер управляющего слова в битах
+    После заголовка идут пиксельные данные.
+    """
+    img = Image.open(file_way)
 
-# для сравнения форматов изображений
-import os
-
-def convert_to_myraw(file_way):
-
-    # открытие файла
-    file = Image.open(file_way)
-
-    # определение типа изображения
-    if file.mode == '1':
+    # Определяем тип изображения
+    if img.mode == '1':
         img_type = 0
-    elif file.mode == 'L':
+    elif img.mode == 'L':
         img_type = 1
     else:
-        file = file.convert('RGB')
+        img = img.convert('RGB')
         img_type = 2
 
-    # определение размера цветности пикселя
-    if img_type == 1 or img_type == 0:
-        data = bytes(file.getdata())
+    # Получаем пиксельные данные
+    if img_type in (0, 1):
+        data = bytes(img.getdata())
     else:
-        data = file.tobytes()
+        data = img.tobytes()
 
-    # определение ширины и высоты изображения
-    width, height = file.size
+    width, height = img.size
 
-    # формирование заголовка
-    header = struct.pack('<BHH', img_type, width, height)
+    # Если Ms не задан, выбираем по умолчанию:
+    # для ч/б и серого – 8 бит, для цветного – 24 бита
+    if Ms is None:
+        Ms = 8 if img_type in (0, 1) else 24
+    if Mc is None:
+        Mc = 16   # разумное значение по умолчанию
 
-    # создаём raw формат
+    # Формируем заголовок: тип (1) + ширина (2) + высота (2) + Ms (2) + Mc (2) = 9 байт
+    header = struct.pack('<BHHHH', img_type, width, height, Ms, Mc)
+
     with open(f'{file_way}.myraw', 'wb') as f:
         f.write(header)
         f.write(data)
 
+
 def compare(file_way):
+    """Сравнивает размер исходного изображения и полученного .myraw."""
     print(f"Файл: {file_way}")
     print(f"  Исходный размер: {os.path.getsize(file_way)} байт")
     print(f"  Raw размер:      {os.path.getsize(f'{file_way}.myraw')} байт")
     print(f"  Коэф. сжатия (исх/raw): {os.path.getsize(file_way) / os.path.getsize(f'{file_way}.myraw'):.3f}\n")
 
-if __name__ == '__main__':
-    #конвертация
-    convert_to_myraw('bw_photo.jpg')
-    convert_to_myraw('grey_photo.jpg')
-    convert_to_myraw('color_photo.avif')
 
-    #сравнение
-    compare('bw_photo.jpg')
+if __name__ == '__main__':
+    # Пример использования – можно задать Ms и Mc явно
+    convert_to_myraw('bw_photo.png', Ms=8, Mc=16)
+    convert_to_myraw('grey_photo.jpg', Ms=8, Mc=16)
+    convert_to_myraw('color_photo.avif', Ms=24, Mc=16)
+
+    compare('bw_photo.png')
     compare('grey_photo.jpg')
     compare('color_photo.avif')
