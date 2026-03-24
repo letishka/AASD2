@@ -5,10 +5,8 @@ from PIL import Image
 def convert_to_myraw(file_way, Ms=None, Mc=None):
     """
     Конвертирует изображение в собственный raw-формат (.myraw).
-    Заголовок (9 байт):
+    Заголовок (5 байт):
       - тип (1 байт): 0 – ч/б, 1 – оттенки серого, 2 – цветное
-      - ширина (2 байта, little-endian)
-      - высота (2 байта, little-endian)
       - Ms (2 байта, little-endian) – размер символа в битах
       - Mc (2 байта, little-endian) – размер управляющего слова в битах
     После заголовка идут пиксельные данные.
@@ -30,8 +28,6 @@ def convert_to_myraw(file_way, Ms=None, Mc=None):
     else:
         data = img.tobytes()
 
-    width, height = img.size
-
     # Если Ms не задан, выбираем по умолчанию:
     # для ч/б и серого – 8 бит, для цветного – 24 бита
     if Ms is None:
@@ -39,8 +35,8 @@ def convert_to_myraw(file_way, Ms=None, Mc=None):
     if Mc is None:
         Mc = 16   # разумное значение по умолчанию
 
-    # Формируем заголовок: тип (1) + ширина (2) + высота (2) + Ms (2) + Mc (2) = 9 байт
-    header = struct.pack('<BHHHH', img_type, width, height, Ms, Mc)
+    # Формируем заголовок: тип (1) + Ms (2) + Mc (2) = 5 байт
+    header = struct.pack('<BHH', img_type, Ms, Mc)
 
     with open(f'{file_way}.myraw', 'wb') as f:
         f.write(header)

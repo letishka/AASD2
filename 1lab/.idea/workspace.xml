@@ -10,8 +10,16 @@
       <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Arifm.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BWT.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Entropy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Huffman.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LZ.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MTF.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/RLE.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compressors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/experiments.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,16 +44,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.RLE.executor&quot;: &quot;Run&quot;,
-    &quot;Python.converter_to_raw.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.Arifm.executor": "Run",
+    "Python.BWT.executor": "Run",
+    "Python.Entropy.executor": "Run",
+    "Python.Huffman.executor": "Run",
+    "Python.LZ.executor": "Run",
+    "Python.MTF.executor": "Run",
+    "Python.RLE.executor": "Run",
+    "Python.block_BWT.executor": "Run",
+    "Python.compressors.executor": "Run",
+    "Python.converter_to_raw.executor": "Run",
+    "Python.experiments.executor": "Run",
+    "Python.test.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/krota/Documents/GitHub/AASD2/1lab"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
