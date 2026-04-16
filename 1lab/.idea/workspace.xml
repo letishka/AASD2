@@ -57,6 +57,7 @@
     "Python.block_BWT.executor": "Run",
     "Python.compressors.executor": "Run",
     "Python.converter_to_raw.executor": "Run",
+    "Python.experement_3.executor": "Run",
     "Python.experiments.executor": "Run",
     "Python.test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
