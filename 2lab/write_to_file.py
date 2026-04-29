@@ -59,7 +59,7 @@ def compress_image(img, quality=50):
     Cr = bytes(ycbcr[i] for i in range(2, len(ycbcr), 3))
 
     def encode_channel(channel_bytes, width, height):
-        """Сжимает один канал и возвращает (dc_vals, ac_symbols)"""
+        #Сжимает один канал и возвращает (dc_vals, ac_symbols)
         blocks = channel_to_blocks(channel_bytes, width, height, 8)
         dc_vals = []
         ac_symbols = []
@@ -179,8 +179,7 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
     n = len(bitstream)
 
     def decode_channel(ch_w, ch_h, start_pos):
-        """Декодирует один канал, начиная с позиции start_pos.
-        Возвращает (bytes канала, список блоков, новая позиция)"""
+        # декодит, начиная с позиции start_pos. Возвращает (bytes канала, список блоков, новая позиция)
         pos = start_pos
         expected_blocks = (ch_w // 8) * (ch_h // 8)
         if expected_blocks == 0:
@@ -193,21 +192,16 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
             # DC
             if USE_HUFFMAN:
                 cat, pos = huffman_decode_dc(bitstream, pos)
-                if cat is None:
-                    break
-                if pos + cat > n:
-                    break
+                if cat is None:    break
+                if pos + cat > n:    break
                 bits = bitstream[pos:pos+cat]
                 pos += cat
                 diff_val = decode_value_from_bits(bits, cat)
             else:
-                if pos + 16 > n:
-                    break
+                if pos + 16 > n:    break
                 raw = int(bitstream[pos:pos+16], 2)
-                if raw >= 32768:
-                    diff_val = raw - 65536
-                else:
-                    diff_val = raw
+                if raw >= 32768:    diff_val = raw - 65536
+                else:    diff_val = raw
                 pos += 16
             dc_diff.append(diff_val)
 
@@ -216,22 +210,17 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
             while True:
                 if USE_HUFFMAN:
                     pair, pos = huffman_decode_ac(bitstream, pos)
-                    if pair is None:
-                        break
+                    if pair is None:    break
                     run, cat = pair
                 else:
-                    if pos + 8 > n:
-                        break
+                    if pos + 8 > n:    break
                     run = int(bitstream[pos:pos+4], 2)
                     cat = int(bitstream[pos+4:pos+8], 2)
                     pos += 8
-                if run == 0 and cat == 0:
-                    break
-                if cat == 0:
-                    pairs.append((run, cat, ""))
+                if run == 0 and cat == 0:    break
+                if cat == 0:    pairs.append((run, cat, ""))
                 else:
-                    if pos + cat > n:
-                        break
+                    if pos + cat > n:    break
                     bits = bitstream[pos:pos+cat]
                     pos += cat
                     pairs.append((run, cat, bits))
@@ -239,10 +228,8 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
             block_idx += 1
 
         # Восстановление DC
-        if USE_DIFF:
-            dc_vals = diff_decode_dc(dc_diff)
-        else:
-            dc_vals = dc_diff[:]
+        if USE_DIFF:    dc_vals = diff_decode_dc(dc_diff)
+        else:    dc_vals = dc_diff[:]
 
         restored_blocks = []
         for i in range(len(dc_vals)):

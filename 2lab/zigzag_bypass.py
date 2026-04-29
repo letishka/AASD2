@@ -66,7 +66,6 @@ def zigzag_rect(matrix):
     return result
 
 def inverse_zigzag(flat, n=8):
-    """Восстанавливает матрицу n×n из зигзаг-списка."""
     if len(flat) != n*n:
         raise ValueError("Wrong length")
     mat = [[0]*n for _ in range(n)]

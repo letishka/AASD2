@@ -18,7 +18,7 @@ def channel_to_blocks(channel_bytes, width, height, block_size=8):
                         block[y][x] = val
                         sum_val += val
                         count += 1
-            if count < block_size * block_size and count > 0:
+            if count < block_size * block_size:
                 avg = sum_val / count
                 for y in range(block_size):
                     for x in range(block_size):
@@ -105,8 +105,8 @@ def dequantize(q, qtable):
 def process_channel(channel_bytes, width, height, qtable):
     blocks = channel_to_blocks(channel_bytes, width, height, 8)
     quant_blocks = []
-    for blk in blocks:
-        coeffs = dct_2d(blk)
+    for block in blocks:
+        coeffs = dct_2d(block)
         quant_blocks.append(quantize(coeffs, qtable))
     restored_blocks = []
     for qblk in quant_blocks:
@@ -138,12 +138,7 @@ Q_C = [
 ]
 
 if __name__ == "__main__":
-    # Загружаем цветное изображение
     img = Image.open("color_image.png").convert('RGB')
-    # Обрезаем до кратности 8
-    w = img.width - (img.width % 8)
-    h = img.height - (img.height % 8)
-    img = img.crop((0, 0, w, h))
 
     rgb_bytes = img.tobytes()
     ycbcr_bytes = rgb_to_ycbcr(rgb_bytes)
@@ -153,7 +148,7 @@ if __name__ == "__main__":
     cb_bytes = bytes(ycbcr_bytes[i] for i in range(1, len(ycbcr_bytes), 3))
     cr_bytes = bytes(ycbcr_bytes[i] for i in range(2, len(ycbcr_bytes), 3))
 
-    # Применяем DCT + квантование к каждому каналу (полный размер)
+    # DCT + квантование к каждому каналу
     y_restored = process_channel(y_bytes, w, h, Q_Y)
     cb_restored = process_channel(cb_bytes, w, h, Q_C)
     cr_restored = process_channel(cr_bytes, w, h, Q_C)

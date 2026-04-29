@@ -18,7 +18,7 @@ IMAGES = {
     "BW_dither": "bw_dither.png",
 }
 
-QUALITY_VALUES = list(range(10, 91, 10))   # 10, 20, ..., 90
+QUALITY_VALUES = list(range(10, 91, 10))
 OUTPUT_DIR = "quality_results"             # папка для результатов
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

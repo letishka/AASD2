@@ -28,7 +28,6 @@ def rle_ac(ac_list):
     return rle
 
 def diff_decode_dc(diff_list):
-    """Обратное разностное декодирование DC коэффициентов."""
     if not diff_list:
         return []
     dc = [diff_list[0]]
@@ -37,7 +36,7 @@ def diff_decode_dc(diff_list):
     return dc
 
 def rle_decode_ac(rle_pairs):
-    """Обратное RLE: восстанавливает список AC коэффициентов из пар (количество нулей, значение)."""
+    #восстанавливает список AC коэффициентов из пар (количество нулей, значение)
     ac = []
     for zeros, val in rle_pairs:
         if zeros == 0 and val == 0:

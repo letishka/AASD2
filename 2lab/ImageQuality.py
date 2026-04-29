@@ -1,14 +1,10 @@
 import math
 
 def adapt_quantization_table(q_table, quality):
-    if quality < 1:
-        quality = 1
-    if quality > 99:
-        quality = 99
-    if quality < 50:
-        S = 5000.0 / quality
-    else:
-        S = 200.0 - 2.0 * quality
+    if quality < 1:    quality = 1
+    if quality > 99:    quality = 99
+    if quality < 50:    S = 5000.0 / quality
+    else:    S = 200.0 - 2.0 * quality
 
     n = len(q_table)
     m = len(q_table[0])
@@ -17,10 +13,8 @@ def adapt_quantization_table(q_table, quality):
         for j in range(m):
             val = (q_table[i][j] * S) / 100.0
             val = int(math.ceil(val))
-            if val < 1:
-                val = 1
-            if val > 255:      # <-- ВАЖНО: обрезаем значения >255
-                val = 255
+            if val < 1:    val = 1
+            if val > 255:    val = 255
             new_table[i][j] = val
     return new_table
 

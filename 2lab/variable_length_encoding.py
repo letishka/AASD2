@@ -1,6 +1,5 @@
 def get_category(value):
-    if value == 0:
-        return 0
+    if value == 0:    return 0
     abs_val = abs(value)
     cat = 1
     bound = 1
@@ -10,8 +9,7 @@ def get_category(value):
     return cat
 
 def vlc_encode_value(value, category):
-    if category == 0:
-        return ""
+    if category == 0:    return ""
     if value > 0:
         bits = bin(value)[2:]
         if len(bits) > category:
@@ -25,6 +23,13 @@ def vlc_encode_value(value, category):
 
 def vlc_encode_dc(diff_list):
     return [(get_category(d), vlc_encode_value(d, get_category(d))) for d in diff_list]
+
+def vlc_decode_dc(vlc_list):
+    #Из списка (cat, bits) получаем разности DC
+    diff = []
+    for cat, bits in vlc_list:
+        diff.append(decode_value_from_bits(bits, cat))
+    return diff
 
 def rle_vlc_encode_ac(ac_list):
     result = []
@@ -46,7 +51,18 @@ def rle_vlc_encode_ac(ac_list):
     result.append((0, 0, ""))
     return result
 
-# ----- Декодирование -----
+def rle_vlc_decode_ac(pairs):
+    ac = []
+    for run, cat, bits in pairs:
+        if run == 0 and cat == 0:    break
+        if run == 15 and cat == 0:    ac.extend([0] * 16)
+        else:
+            ac.extend([0] * run)
+            if cat > 0:
+                ac.append(decode_value_from_bits(bits, cat))
+    while len(ac) < 63:    ac.append(0)
+    return ac[:63]
+
 def decode_value_from_bits(bits, category):
     if category == 0:
         return 0
@@ -56,28 +72,6 @@ def decode_value_from_bits(bits, category):
         return min_neg + val
     else:
         return val
-
-def vlc_decode_dc(vlc_list):
-    """Из списка (cat, bits) получаем разности DC."""
-    diff = []
-    for cat, bits in vlc_list:
-        diff.append(decode_value_from_bits(bits, cat))
-    return diff
-
-def rle_vlc_decode_ac(pairs):
-    ac = []
-    for run, cat, bits in pairs:
-        if run == 0 and cat == 0:
-            break
-        if run == 15 and cat == 0:      # ZRL
-            ac.extend([0] * 16)
-        else:
-            ac.extend([0] * run)
-            if cat > 0:
-                ac.append(decode_value_from_bits(bits, cat))
-    while len(ac) < 63:
-        ac.append(0)
-    return ac[:63]
 
 if __name__ == "__main__":
     # Тест DC VLC
