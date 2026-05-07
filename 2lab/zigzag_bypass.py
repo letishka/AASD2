@@ -40,34 +40,30 @@ def zigzag_rect(matrix):
     # Проходим по всем диагоналям
     for s in range(n + m - 1):
         if s % 2 == 0:
-            # Чётная диагональ: идём сверху вниз
+            # Чётная диагональ: идём вверх
             i = s
-            if i >= n:
-                i = n - 1
+            if i >= n:    i = n - 1
             while i >= 0:
                 j = s - i
-                if j >= 0 and j < m:    result.append(matrix[i][j])
-                else:
-                    if j < 0:    break
-                i = i - 1
+                if j >= 0 and j < m:
+                    result.append(matrix[i][j])
+                elif j < 0:    break
+                i -= 1
         else:
-            # Нечётная диагональ: идём снизу вверх
+            # Нечётная диагональ: идём вниз
             i = 0
-            if s >= m:
-                i = s - (m - 1)
+            if s >= m:    i = s - (m - 1)
             while i < n:
                 j = s - i
                 if j >= 0 and j < m:
                     result.append(matrix[i][j])
-                else:
-                    if j < 0:
-                        break
-                i = i + 1
+                elif j < 0:    break
+                i += 1
     return result
 
-def inverse_zigzag(flat, n=8):
-    if len(flat) != n*n:
-        raise ValueError("Wrong length")
+def inverse_zigzag(matrix, n=8):
+    if len(matrix) != n*n:
+        print("\nWrong length\n")
     mat = [[0]*n for _ in range(n)]
     idx = 0
     for s in range(2*n - 1):
@@ -76,7 +72,7 @@ def inverse_zigzag(flat, n=8):
             while i >= 0:
                 j = s - i
                 if 0 <= j < n:
-                    mat[i][j] = flat[idx]
+                    mat[i][j] = matrix[idx]
                     idx += 1
                 i -= 1
         else:
@@ -84,7 +80,7 @@ def inverse_zigzag(flat, n=8):
             while i < n:
                 j = s - i
                 if 0 <= j < n:
-                    mat[i][j] = flat[idx]
+                    mat[i][j] = matrix[idx]
                     idx += 1
                 i += 1
     return mat

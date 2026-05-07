@@ -72,18 +72,52 @@ def transpose(M):
 
 def dct_2d(block):
     n = len(block)
-    C = build_dct_matrix(n)
-    Ct = transpose(C)
-    temp = mat_mul(Ct, block)
-    coeffs = mat_mul(temp, C)
+    m = len(block[0])
+    C_n = build_dct_matrix(n)
+    C_m = build_dct_matrix(m)
+    C_nt = transpose(C_n)
+    temp = mat_mul(C_nt, block)
+    coeffs = mat_mul(temp, C_m)
     return coeffs
 
 def idct_2d(coeffs):
     n = len(coeffs)
-    C = build_dct_matrix(n)
-    Ct = transpose(C)
-    temp = mat_mul(C, coeffs)
-    block = mat_mul(temp, Ct)
+    m = len(coeffs[0])
+    C_n = build_dct_matrix(n)
+    C_m = build_dct_matrix(m)
+    C_mt = transpose(C_m)
+    temp = mat_mul(C_n, coeffs)
+    block = mat_mul(temp, C_mt)
+    return block
+
+def dct_2d_primitive(block):
+    n = len(block)
+    m = len(block[0])
+    coeffs = [[0.0] * m for _ in range(n)]
+    for v in range(n):
+        for u in range(m):
+            s = 0.0
+            for y in range(n):
+                for x in range(m):
+                    s += block[y][x] * math.cos((2 * y + 1) * v * math.pi / (2 * n)) * math.cos((2 * x + 1) * u * math.pi / (2 * m))
+            alpha_v = 1.0 / math.sqrt(n) if v == 0 else math.sqrt(2.0 / n)
+            alpha_u = 1.0 / math.sqrt(m) if u == 0 else math.sqrt(2.0 / m)
+            coeffs[v][u] = alpha_v * alpha_u * s
+    return coeffs
+
+def idct_2d_primitive(coeffs):
+    n = len(coeffs)
+    m = len(coeffs[0])
+    block = [[0.0] * m for _ in range(n)]
+    for y in range(n):
+        for x in range(m):
+            s = 0.0
+            for v in range(n):
+                for u in range(m):
+                    alpha_v = 1.0 / math.sqrt(n) if v == 0 else math.sqrt(2.0 / n)
+                    alpha_u = 1.0 / math.sqrt(m) if u == 0 else math.sqrt(2.0 / m)
+                    s += alpha_v * alpha_u * coeffs[v][u] * math.cos((2 * y + 1) * v * math.pi / (2 * n)) * math.cos((2 * x + 1) * u * math.pi / (2 * m))
+            block[y][x] = s
     return block
 
 def quantize(coeffs, qtable):
@@ -139,6 +173,7 @@ Q_C = [
 
 if __name__ == "__main__":
     img = Image.open("color_image.png").convert('RGB')
+    w, h = img.size
 
     rgb_bytes = img.tobytes()
     ycbcr_bytes = rgb_to_ycbcr(rgb_bytes)
@@ -162,5 +197,5 @@ if __name__ == "__main__":
 
     restored_rgb = ycbcr_to_rgb(bytes(restored_ycbcr))
     restored_img = Image.frombytes('RGB', (w, h), restored_rgb)
-    restored_img.save("restored_dct_ycbcr.jpg")
-    print("Сохранено restored_dct_ycbcr.jpg")
+    restored_img.save("restored_dct.jpg")
+    print("Сохранено restored_dct.jpg")

@@ -1,25 +1,18 @@
 def get_category(value):
     if value == 0:    return 0
-    abs_val = abs(value)
-    cat = 1
-    bound = 1
-    while abs_val > bound:
-        cat += 1
-        bound = (1 << cat) - 1
-    return cat
+    else: return (abs(value).bit_length())
 
 def vlc_encode_value(value, category):
     if category == 0:    return ""
-    if value > 0:
-        bits = bin(value)[2:]
-        if len(bits) > category:
-            raise ValueError("Value too large")
-        return bits.zfill(category)
-    else:
-        min_neg = -((1 << category) - 1)
-        offset = value - min_neg
-        bits = bin(offset)[2:]
-        return bits.zfill(category)
+    bits = bin(abs(value))[2:].zfill(category)
+    if len(bits) == 0:
+        print("\nInvalid value\n")
+        return ""
+    if value < 0:
+        mask = int("1" * category, 2)
+        val = abs(value) ^ mask
+        bits = bin(val)[2:].zfill(category)
+    return bits
 
 def vlc_encode_dc(diff_list):
     return [(get_category(d), vlc_encode_value(d, get_category(d))) for d in diff_list]
@@ -41,9 +34,6 @@ def rle_vlc_encode_ac(ac_list):
                 result.append((15, 0, ""))
                 zeros = 0
         else:
-            while zeros >= 16:
-                result.append((15, 0, ""))
-                zeros -= 16
             cat = get_category(coeff)
             bits = vlc_encode_value(coeff, cat)
             result.append((zeros, cat, bits))

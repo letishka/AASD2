@@ -18,7 +18,7 @@ def rle_ac(ac_list):
     zeros = 0
     for coeff in ac_list:
         if coeff == 0:
-            zeros = zeros + 1
+            zeros += 1
         else:
             rle.append((zeros, coeff))
             zeros = 0
@@ -36,14 +36,14 @@ def diff_decode_dc(diff_list):
     return dc
 
 def rle_decode_ac(rle_pairs):
-    #восстанавливает список AC коэффициентов из пар (количество нулей, значение)
+    # Восстанавливает список AC коэффициентов из пар (количество нулей, значение)
     ac = []
     for zeros, val in rle_pairs:
         if zeros == 0 and val == 0:
             break   # EOB
         ac.extend([0] * zeros)
         ac.append(val)
-    return ac[:63]   # обрезаем до 63, если больше
+    return ac[:63]
 
 if __name__ == "__main__":
     # Тест DC
