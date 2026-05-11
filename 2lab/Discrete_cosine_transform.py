@@ -197,5 +197,4 @@ if __name__ == "__main__":
 
     restored_rgb = ycbcr_to_rgb(bytes(restored_ycbcr))
     restored_img = Image.frombytes('RGB', (w, h), restored_rgb)
-    restored_img.save("restored_dct.jpg")
-    print("Сохранено restored_dct.jpg")
+    restored_img.show()

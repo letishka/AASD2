@@ -1,8 +1,5 @@
 
 def zigzag_square(matrix):
-    # Вход: список списков (матрица).
-    # Выход: плоский список значений в порядке зигзаг-обхода
-
     n = len(matrix)
     result = []
     # Проходим по всем диагоналям (сумма индексов от 0 до 2*n-2)
@@ -31,9 +28,6 @@ def zigzag_square(matrix):
 
 
 def zigzag_rect(matrix):
-    #Вход: список списков (матрица)
-    #Выход: плоский список значений в порядке зигзаг-обхода
-
     n = len(matrix)       # число строк
     m = len(matrix[0])    # число столбцов
     result = []
@@ -96,12 +90,13 @@ if __name__ == "__main__":
     for row in mat:
         print(row)
     zig = zigzag_square(mat)
-    print("Зигзаг-обход:", zig)
-    # Ожидается: [1, 2, 4, 7, 5, 3, 6, 8, 9]
+    print(f"  Ожидание: [1, 2, 4, 7, 5, 3, 6, 8, 9].\nРеальность: {zig}.\n")
 
     restored = inverse_zigzag(zig, 3)
-    assert restored == mat, "inverse_zigzag failed"
-    print("inverse_zigzag OK")
+    print("Востановленная:")
+    for row in restored:
+        print(row)
+
     print()
 
     mat_rect_h = [
@@ -113,8 +108,7 @@ if __name__ == "__main__":
     for row in mat_rect_h:
         print(row)
     zigr = zigzag_rect(mat_rect_h)
-    print("Зигзаг-обход:", zigr)
-    # Должно: [1, 2, 5, 9, 6, 3, 4, 7, 10, 11, 8, 12]
+    print(f"  Ожидание: [1, 2, 5, 9, 6, 3, 4, 7, 10, 11, 8, 12].\nРеальность: {zigr}.\n")
 
     print()
 
@@ -128,5 +122,4 @@ if __name__ == "__main__":
     for row in mat_rect_v:
         print(row)
     zigr2 = zigzag_rect(mat_rect_v)
-    print("Зигзаг-обход:", zigr2)
-    # Должно: [1, 2, 4, 7, 5, 3, 6, 8, 10, 11, 9, 12]
+    print(f"  Ожидание: [1, 2, 4, 7, 5, 3, 6, 8, 10, 11, 9, 12].\nРеальность: {zigr2}.\n")

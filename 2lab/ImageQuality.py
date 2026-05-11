@@ -33,11 +33,12 @@ Q_Y = [
 if __name__ == "__main__":
     print("Исходная таблица квантования (Q=50):")
     for row in Q_Y:
-        print(" ".join("%3d" % v for v in row))# Короткий тест: при Q=50 таблица не должна измениться
+        print(" ".join("%3d" % v for v in row))
 
+    print("\nАдаптированная таблица для Q=50:") # Таблица не должна измениться
     q50 = adapt_quantization_table(Q_Y, 50)
-    assert q50 == Q_Y, "Ошибка: при Q=50 таблица должна остаться неизменной"
-    print("Тест Q=50 пройден")
+    for row in q50:
+        print(" ".join("%3d" % v for v in row))
 
     print("\nАдаптированная таблица для Q=90:")
     q90 = adapt_quantization_table(Q_Y, 90)

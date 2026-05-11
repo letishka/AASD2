@@ -2,8 +2,8 @@ import os
 from PIL import Image
 
 def save_raw_from_bytes(pixel_bytes, width, height, img_type, colorspace, filename):
-    """Запись raw с 6-байтовым заголовком."""
     header = bytearray()
+    #6-байтовый заголовок
     header.append(img_type)
     header.append(colorspace)
     header.append((width >> 8) & 0xFF)

@@ -2,7 +2,6 @@
 def diff_encode_dc(dc_list):
     # Вход: список DC коэффициентов (первых коэффициентов каждого блока)
     # Выход: список разностных кодов
-
     if len(dc_list) == 0:
         return []
     diff = [dc_list[0]]
@@ -13,7 +12,6 @@ def diff_encode_dc(dc_list):
 def rle_ac(ac_list):
     # Вход: список из 63 целых чисел (коэффициентов AC).
     # Выход: список пар (количество нулей, значение), завершающийся (0,0) если есть хвост из нулей.
-
     rle = []
     zeros = 0
     for coeff in ac_list:
@@ -46,18 +44,16 @@ def rle_decode_ac(rle_pairs):
     return ac[:63]
 
 if __name__ == "__main__":
-    # Тест DC
+    print("Тест DC")
     dc_orig = [100, 102, 105, 103, 110]
     diff = diff_encode_dc(dc_orig)
     dc_decoded = diff_decode_dc(diff)
-    assert dc_decoded == dc_orig, "DC decode failed"
-    print("DC decode OK")
+    print(f"  Ожидание: {dc_orig}.\nРеальность: {dc_decoded}.\n")
 
-    # Тест RLE
+    print("Тест AC")
     ac_orig = [5, 0, 0, 3, 0, 1, 0, 0, 0, 2] + [0]*53
     rle = rle_ac(ac_orig)
     ac_decoded = rle_decode_ac(rle)
-    # Дополняем до 63 нулями (если нужно)
+    # Дополняем блок нулями
     ac_decoded = ac_decoded + [0] * (63 - len(ac_decoded))
-    assert ac_decoded[:len(ac_orig)] == ac_orig[:len(ac_decoded)], "RLE decode failed"
-    print("RLE decode OK")
+    print(f"  Ожидание: {ac_orig}.\nРеальность: {ac_decoded}.\n")

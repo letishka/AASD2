@@ -1,6 +1,5 @@
 from PIL import Image
 
-# Вспомогательные функции
 def get_pixel(data, x, y, width, channels):
     idx = (y * width + x) * channels
     if channels == 1:   return (data[idx],)
@@ -59,13 +58,11 @@ def linear_spline(x_points, y_points, x):
 
     return linear_interpolation(x_points[i], x_points[i+1], y_points[i], y_points[i+1], x)
 
-# Билинейная интерполяция для четырёх точек
 def bilinear_interpolation(x1, x2, y1, y2, z11, z12, z21, z22, x, y):
     z_y1 = linear_interpolation(x1, x2, z11, z21, x)
     z_y2 = linear_interpolation(x1, x2, z12, z22, x)
     return linear_interpolation(y1, y2, z_y1, z_y2, y)
 
-# Изменение размера с билинейной интерполяцией
 def resize_bilinear(img_bytes, width, height, channels, new_width, new_height):
     # Вход: байты пикселей, ширина, высота, число каналов, новая ширина, новая высота.
     # Выход: байты нового изображения.
@@ -123,60 +120,51 @@ def resize_bilinear(img_bytes, width, height, channels, new_width, new_height):
 
     return bytes(new_data)
 
-img = Image.open("color_image.png")
-if img.width < 512 or img.height < 512:
-    img = img.resize((512, 512), Image.BILINEAR)
-if img.mode != 'RGB':
-    img = img.convert('RGB')
+if __name__ == "__main__":
+    img = Image.open("color_image.png")
 
-width = img.width
-height = img.height
-channels = 3
-pixels = img.tobytes()
+    width = img.width
+    height = img.height
+    channels = 3
+    pixels = img.tobytes()
 
-print("Исходный размер: %dx%d" % (width, height))
+    print("Исходный размер: %dx%d" % (width, height))
 
-# Даунсэмплинг
-down_pixels, down_w, down_h = downsample(pixels, width, height, channels)
-print("После даунсэмплинга: %dx%d" % (down_w, down_h))
+    # Даунсэмплинг
+    down_pixels, down_w, down_h = downsample(pixels, width, height, channels)
+    print("После даунсэмплинга: %dx%d" % (down_w, down_h))
 
-# Апсемплинг (дублированием)
-up_pixels, up_w, up_h = upsample(down_pixels, down_w, down_h, channels)
-print("После апсемплинга (дублирование): %dx%d" % (up_w, up_h))
+    # Апсемплинг (дублированием)
+    up_pixels, up_w, up_h = upsample(down_pixels, down_w, down_h, channels)
+    print("После апсемплинга (дублирование): %dx%d" % (up_w, up_h))
 
-# Сохраняем уменьшенное и увеличенное изображения для сранения
-img_down = Image.frombytes('RGB', (down_w, down_h), down_pixels)
-img_down.save("downsampled.png")
+    # Уменьшенное и увеличенное изображения
+    img_down = Image.frombytes('RGB', (down_w, down_h), down_pixels)
+    img_down.show()
+    img_up = Image.frombytes('RGB', (up_w, up_h), up_pixels)
+    img_up.show()
 
-img_up = Image.frombytes('RGB', (up_w, up_h), up_pixels)
-img_up.save("upsampled_duplication.png")
+    # Проверка билинейной интерполяции на небольшом примере
+    x1, x2 = 0.0, 1.0
+    y1, y2 = 0.0, 1.0
+    z11 = 10.0
+    z12 = 20.0
+    z21 = 30.0
+    z22 = 40.0
+    x, y = 0.5, 0.5
+    val = bilinear_interpolation(x1, x2, y1, y2, z11, z12, z21, z22, x, y)
+    print("Билинейная интерполяция в центре: %.2f (ожидалось 25.0)" % val)
 
-print("Сохранены: downsampled.png (уменьшенное в 2 раза)")
-print("           upsampled_duplication.png (увеличенное обратно дублированием - видны пиксели)")
+    # Уменьшим изображение
+    new_w = 400
+    new_h = 300
+    resized_pixels = resize_bilinear(pixels, width, height, channels, new_w, new_h)
+    img_resized = Image.frombytes('RGB', (new_w, new_h), resized_pixels)
+    img_resized.show()
 
-# Проверка билинейной интерполяции на небольшом примере
-x1, x2 = 0.0, 1.0
-y1, y2 = 0.0, 1.0
-z11 = 10.0
-z12 = 20.0
-z21 = 30.0
-z22 = 40.0
-x, y = 0.5, 0.5
-val = bilinear_interpolation(x1, x2, y1, y2, z11, z12, z21, z22, x, y)
-print("Билинейная интерполяция в центре: %.2f (ожидалось 25.0)" % val)
-
-# Уменьшим изображение
-new_w = 400
-new_h = 300
-resized_pixels = resize_bilinear(pixels, width, height, channels, new_w, new_h)
-img_resized = Image.frombytes('RGB', (new_w, new_h), resized_pixels)
-img_resized.save("resized_bilinear.png")
-print("Сохранено resized_bilinear.png (изменение размера билинейной интерполяцией до %dx%d)" % (new_w, new_h))
-
-# Увеличим изображение
-new_w2 = 800
-new_h2 = 800
-resized_pixels2 = resize_bilinear(pixels, width, height, channels, new_w2, new_h2)
-img_resized2 = Image.frombytes('RGB', (new_w2, new_h2), resized_pixels2)
-img_resized2.save("resized_bilinear_up.png")
-print("Сохранено resized_bilinear_up.png (увеличение до %dx%d)" % (new_w2, new_h2))
+    # Увеличим изображение
+    new_w2 = 800
+    new_h2 = 800
+    resized_pixels2 = resize_bilinear(pixels, width, height, channels, new_w2, new_h2)
+    img_resized2 = Image.frombytes('RGB', (new_w2, new_h2), resized_pixels2)
+    img_resized2.show()

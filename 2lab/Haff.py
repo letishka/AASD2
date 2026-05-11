@@ -188,8 +188,7 @@ REV_AC = {code: (run, cat) for (run, cat), code in AC_HUFFMAN.items()}
 
 def huffman_encode_dc(category):
     # Вход: целое число от 0 до 11
-    # Выход: строка битов (или пустая строка, если категория не найдена)
-
+    # Выход: строка битов (пустая, если категория не найдена)
     if category in DC_HUFFMAN:
         return DC_HUFFMAN[category]
     return ""
@@ -197,10 +196,8 @@ def huffman_encode_dc(category):
 def huffman_encode_ac(run, category):
     # Вход: run (0..15), category (0..10)
     # Выход: строка битов
-
     key = (run, category)
-    if key in AC_HUFFMAN:
-        return AC_HUFFMAN[key]
+    if key in AC_HUFFMAN: return AC_HUFFMAN[key]
     return ""
 
 def bits_to_bytes(bit_string):
@@ -223,8 +220,7 @@ def huffman_decode_dc(bitstring, pos=0):
     while pos < len(bitstring):
         code += bitstring[pos]
         pos += 1
-        if code in REV_DC:
-            return REV_DC[code], pos
+        if code in REV_DC: return REV_DC[code], pos
     return None, pos
 
 def huffman_decode_ac(bitstring, pos=0):
@@ -247,8 +243,7 @@ if __name__ == "__main__":
     while pos < len(bitstream):
         cat, pos = huffman_decode_dc(bitstream, pos)
         decoded_cats.append(cat)
-    if decoded_cats == cats: print("DC Huffman decode failed")
-    print("DC Huffman decode OK")
+    print(f"  Ожидание: {cats}.\nРеальность: {decoded_cats}.\n")
 
     # Тест AC Хаффмана
     pairs = [(0,2), (1,1), (0,0)]
@@ -260,5 +255,4 @@ if __name__ == "__main__":
     while pos < len(bitstream):
         pair, pos = huffman_decode_ac(bitstream, pos)
         decoded_pairs.append(pair)
-    if decoded_pairs == pairs: print("AC Huffman decode failed")
-    print("AC Huffman decode OK")
+    print(f"  Ожидание: {pairs}.\nРеальность: {decoded_pairs}.\n")

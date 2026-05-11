@@ -1,5 +1,4 @@
 from PIL import Image
-from prepare_images import save_raw, save_raw_from_bytes
 
 def rgb_to_ycbcr(rgb_bytes):
     n = len(rgb_bytes) // 3
@@ -40,24 +39,9 @@ def ycbcr_to_rgb(ycbcr_bytes):
 if __name__ == "__main__":
     img_rgb = Image.open("color_image.png").convert('RGB')
     rgb_data = img_rgb.tobytes()
+
     ycbcr_data = rgb_to_ycbcr(rgb_data)
     rgb_data2 = ycbcr_to_rgb(ycbcr_data)
 
     img_restored = Image.frombytes('RGB', img_rgb.size, rgb_data2)
-    img_restored.save("restored_rgb.png")
-    print("Восстановленное изображение сохранено: restored_rgb.png")
-
-    # Сохраняем raw для RGB
-    save_raw(img_rgb, "color_rgb.raw", colorspace=0)
-
-    # Сохраняем raw для YCbCr
-    save_raw_from_bytes(
-        pixel_bytes=ycbcr_data,
-        width=img_rgb.width,
-        height=img_rgb.height,
-        img_type=2,
-        colorspace=1,
-        filename="color_ycbcr.raw"
-    )
-
-    print("Raw-файлы color_rgb.raw и color_ycbcr.raw созданы.")
+    img_restored.show(title='img_restored')
