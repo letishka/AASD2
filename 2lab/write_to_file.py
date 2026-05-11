@@ -19,9 +19,8 @@ from Downsampling_Upsampling_Resizing import downsample, upsample
 USE_COLOR = True # False - без Cb, Cr
 
 def compress_image(img, quality=50):
-    w = img.width - (img.width % 8)
-    h = img.height - (img.height % 8)
-    img = img.crop((0, 0, w, h))
+    w = img.width
+    h = img.height
     q_table = adapt_quantization_table(Q_Y, quality)
 
     rgb = img.tobytes()
@@ -128,7 +127,7 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
     def decode_channel(ch_w, ch_h, start_pos):
         # декодит, начиная с позиции start_pos. Возвращает (bytes канала, список блоков, новая позиция)
         pos = start_pos
-        expected_blocks = (ch_w // 8) * (ch_h // 8)
+        expected_blocks = ((ch_w + 7) // 8) * ((ch_h + 7) // 8)
         if expected_blocks == 0:
             return bytes(), [], pos
 
