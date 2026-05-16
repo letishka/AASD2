@@ -1,6 +1,5 @@
 import os
 
-# Импорты
 from RLE import encode_file, decode_file
 from Huffman import huffman_encode, save_compressed, load_compressed, huffman_decode
 from Huffman import huffman_encode_canonical, save_compressed_canonical, load_compressed_canonical, huffman_decode_canonical
@@ -9,7 +8,6 @@ from LZ import lz78_encode, lz78_decode, lz78_encode_limited, lzw_encode, lzw_de
 from MTF import mtf_encode, mtf_decode
 from BWT import bwt, ibwt_fast, block_bwt, block_ibwt_fast
 
-# Файлы для тестирования
 test_files = [
     'text.txt',
     'english_text_low127.txt',

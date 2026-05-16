@@ -1,5 +1,5 @@
 import os
-import sys
+from converterTOraw import convert_to_raw
 
 def RLE(string: bytes, Mc: int, Ms: int) -> bytes:
     max_len = (1 << (Mc - 1)) - 1
@@ -12,27 +12,29 @@ def RLE(string: bytes, Mc: int, Ms: int) -> bytes:
     if remainder:
         string = string + b'\x00' * (symbol_len - remainder)
 
-    n = len(string) // symbol_len
+    len_string = len(string) // symbol_len
     rle_string = bytearray()
     rle_string.extend(original_len.to_bytes(4, 'big'))
 
     i = 0
-    while i < n:
+    while i < len_string:
         cur_block = string[i * symbol_len: (i + 1) * symbol_len]
-        if i + 1 < n and string[(i + 1) * symbol_len: (i + 2) * symbol_len] == cur_block:
+        if i + 1 < len_string and string[(i + 1) * symbol_len: (i + 2) * symbol_len] == cur_block:
             count = 1
-            while i + count < n and string[(i + count) * symbol_len: (i + count + 1) * symbol_len] == cur_block and count < max_len:
+            while (i + count < len_string
+                   and string[(i + count) * symbol_len: (i + count + 1) * symbol_len] == cur_block
+                   and count < max_len):
                 count += 1
             rle_string.extend(count.to_bytes(count_len, 'big'))
             rle_string.extend(cur_block)
             i += count
         else:
             raw_len = 1
-            while i + raw_len < n and raw_len < max_len:
+            while i + raw_len < len_string and raw_len < max_len:
                 if string[(i + raw_len) * symbol_len: (i + raw_len + 1) * symbol_len] == string[(i + raw_len - 1) * symbol_len: (i + raw_len) * symbol_len]:
                     break
                 raw_len += 1
-            if i + raw_len < n:
+            if i + raw_len < len_string:
                 if (string[(i + raw_len - 1) * symbol_len: (i + raw_len) * symbol_len] ==
                         string[(i + raw_len) * symbol_len: (i + raw_len + 1) * symbol_len] and raw_len != 1):
                     raw_len -= 1
@@ -45,11 +47,8 @@ def RLE(string: bytes, Mc: int, Ms: int) -> bytes:
 def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
     symbol_len = Ms // 8
     count_len = Mc // 8
-    max_len = (1 << (Mc - 1)) - 1
-
     if not string:
         return b''
-
     if len(string) < 4:
         return b''
     original_len = int.from_bytes(string[:4], 'big')
@@ -57,9 +56,9 @@ def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
 
     rld_string = bytearray()
     i = 0
-    n = len(data)
-    while i < n:
-        if i + count_len > n:
+    len_string = len(data)
+    while i < len_string:
+        if i + count_len > len_string:
             break
         ctrl_bytes = data[i:i + count_len]
         ctrl = int.from_bytes(ctrl_bytes, 'big')
@@ -67,13 +66,13 @@ def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
         if ctrl & (1 << (Mc - 1)):
             length = ctrl & ((1 << (Mc - 1)) - 1)
             for _ in range(length):
-                if i + symbol_len > n:
+                if i + symbol_len > len_string:
                     break
                 rld_string.extend(data[i:i + symbol_len])
                 i += symbol_len
         else:
             count = ctrl
-            if i + symbol_len > n:
+            if i + symbol_len > len_string:
                 break
             block = data[i:i + symbol_len]
             rld_string.extend(block * count)
@@ -81,106 +80,159 @@ def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
 
     return bytes(rld_string[:original_len])
 
-def encode_file(input_path: str, output_path: str, Ms: int, Mc: int) -> None:
+def read_rle_header(filepath):
+    with open(filepath, 'rb') as f:
+        data = f.read()
+    if len(data) < 4:
+        print("Ошибка: некорректный RLE-файл (недостаточно заголовка)")
+        return None, None, None
+    Ms = int.from_bytes(data[:2], 'big')
+    Mc = int.from_bytes(data[2:4], 'big')
+    rest = data[4:]
+    return Ms, Mc, rest
+
+def encode_file(input_path, output_path, Ms, Mc):
     if Ms % 8 != 0 or Mc % 8 != 0:
         print("Ошибка: Ms и Mc должны быть кратны 8")
         return
-    f = open(input_path, 'rb')
-    data = f.read()
-    f.close()
+    with open(input_path, 'rb') as f:
+        data = f.read()
     encoded = RLE(data, Mc, Ms)
     header = Ms.to_bytes(2, 'big') + Mc.to_bytes(2, 'big')
-    f = open(output_path, 'wb')
-    f.write(header + encoded)
-    f.close()
+    with open(output_path, 'wb') as f:
+        f.write(header + encoded)
 
-def decode_file(input_path: str, output_path: str) -> None:
-    f = open(input_path, 'rb')
-    header = f.read(4)
-    if len(header) != 4:
-        print("Ошибка: некорректный файл, недостаточно заголовка")
-        f.close()
+def decode_file(input_path, output_path):
+    Ms, Mc, encoded = read_rle_header(input_path)
+    if Ms is None:
         return
-    Ms = int.from_bytes(header[:2], 'big')
-    Mc = int.from_bytes(header[2:4], 'big')
-    encoded = f.read()
-    f.close()
     if Ms % 8 != 0 or Mc % 8 != 0:
         print("Ошибка: Ms и Mc должны быть кратны 8")
         return
     decoded = RLD(encoded, Mc, Ms)
-    f = open(output_path, 'wb')
-    f.write(decoded)
-    f.close()
+    with open(output_path, 'wb') as f:
+        f.write(decoded)
 
 def read_raw_header(filepath):
-    f = open(filepath, 'rb')
-    header = f.read(5)
-    f.close()
+    with open(filepath, 'rb') as f:
+        header = f.read(5)
     if len(header) != 5:
         print("Ошибка: некорректный raw-файл (не хватает заголовка)")
-        return None, None, None, None, None
+        return None, None, None, None
     img_type = header[0]
     Ms = int.from_bytes(header[1:3], 'little')
     Mc = int.from_bytes(header[3:5], 'little')
     data_offset = 5
     return img_type, Ms, Mc, data_offset
 
-def encode_raw_file(input_path: str, output_path: str, Mc_override=None):
+def encode_raw_file(input_path, output_path, Mc_override=None):
     img_type, Ms, Mc, offset = read_raw_header(input_path)
     if img_type is None:
-        print("Ошибка чтения заголовка raw-файла")
         return
     if Mc_override is not None:
         Mc = Mc_override
 
-    f = open(input_path, 'rb')
-    f.seek(offset)
-    pixel_data = f.read()
-    f.close()
+    with open(input_path, 'rb') as f:
+        f.seek(offset)
+        pixel_data = f.read()
 
     encoded = RLE(pixel_data, Mc, Ms)
 
-    f = open(output_path, 'wb')
-    f.write(Ms.to_bytes(2, 'big'))
-    f.write(Mc.to_bytes(2, 'big'))
-    f2 = open(input_path, 'rb')
-    raw_header = f2.read(5)
-    f2.close()
-    f.write(raw_header)
-    f.write(encoded)
-    f.close()
+    with open(output_path, 'wb') as f_out:
+        f_out.write(Ms.to_bytes(2, 'big'))
+        f_out.write(Mc.to_bytes(2, 'big'))
+        with open(input_path, 'rb') as f_in:
+            raw_header = f_in.read(5)
+        f_out.write(raw_header)
+        f_out.write(encoded)
 
-def decode_raw_file(input_path: str, output_path: str):
-    f = open(input_path, 'rb')
-    ms_bytes = f.read(2)
-    if len(ms_bytes) < 2:
-        print("Ошибка: некорректный сжатый файл")
-        f.close()
+def decode_raw_file(input_path, output_path):
+    Ms, Mc, rest = read_rle_header(input_path)
+    if Ms is None:
         return
-    Ms = int.from_bytes(ms_bytes, 'big')
-    mc_bytes = f.read(2)
-    Mc = int.from_bytes(mc_bytes, 'big')
-    raw_header = f.read(5)
-    if len(raw_header) < 5:
+    if len(rest) < 5:
         print("Ошибка: отсутствует raw-заголовок")
-        f.close()
         return
-    encoded = f.read()
-    f.close()
+    raw_header = rest[:5]
+    encoded = rest[5:]
 
     decoded_pixel = RLD(encoded, Mc, Ms)
 
-    f = open(output_path, 'wb')
-    f.write(raw_header)
-    f.write(decoded_pixel)
-    f.close()
+    with open(output_path, 'wb') as f:
+        f.write(raw_header)
+        f.write(decoded_pixel)
+
+def test_ordinary_files(files, MS, MC):
+    print(f"\n--- Обычные файлы (Ms={MS}, Mc={MC}) ---")
+    for filename in files:
+        if not os.path.exists(filename):
+            print(f"Файл {filename} не найден, пропускаем.")
+            continue
+
+        enc_name = filename + '.rle'
+        dec_name = filename + '.dec'
+
+        encode_file(filename, enc_name, MS, MC)
+        decode_file(enc_name, dec_name)
+
+        with open(filename, 'rb') as f:
+            original = f.read()
+        with open(dec_name, 'rb') as f:
+            recovered = f.read()
+
+        if original == recovered:
+            orig_size = len(original)
+            comp_size = os.path.getsize(enc_name)
+            ratio = orig_size / comp_size if comp_size else 0
+            print(f"OK  {filename}: {orig_size} -> {comp_size} байт (коэф. {ratio:.3f})")
+        else:
+            print(f"FAIL {filename}: восстановление не совпало!")
+
+        for tmp in (enc_name, dec_name):
+            if os.path.exists(tmp):
+                os.remove(tmp)
+
+def test_raw_files(image_pairs, MC_override):
+    print("\n--- Raw-изображения (только пиксельные данные, Ms, Mc из заголовка .raw) ---")
+    for src, raw_name in image_pairs:
+        if not os.path.exists(raw_name):
+            if not os.path.exists(src):
+                print(f"Исходный файл {src} не найден, пропускаем.")
+                continue
+            print(f"Создаём {raw_name} из {src}...")
+            convert_to_raw(src, Ms=None, Mc=16)
+            generated = src + '.raw'
+            if os.path.exists(generated) and not os.path.exists(raw_name):
+                os.rename(generated, raw_name)
+
+        if not os.path.exists(raw_name):
+            print(f"Файл {raw_name} не найден, пропускаем.")
+            continue
+
+        enc_name = raw_name + '.rle'
+        dec_name = raw_name + '.dec'
+
+        encode_raw_file(raw_name, enc_name, Mc_override=MC_override)
+        decode_raw_file(enc_name, dec_name)
+
+        with open(raw_name, 'rb') as f:
+            original = f.read()
+        with open(dec_name, 'rb') as f:
+            recovered = f.read()
+
+        if original == recovered:
+            orig_size = len(original)
+            comp_size = os.path.getsize(enc_name)
+            ratio = orig_size / comp_size if comp_size else 0
+            print(f"OK  {raw_name}: {orig_size} -> {comp_size} байт (коэф. {ratio:.3f})")
+        else:
+            print(f"FAIL {raw_name}: восстановление не совпало!")
+
+        for tmp in (enc_name, dec_name):
+            if os.path.exists(tmp):
+                os.remove(tmp)
 
 if __name__ == '__main__':
-    sys.path.insert(0, os.path.dirname(__file__))
-    from converter_to_raw import convert_to_myraw
-
-    # Обычные файлы – теперь включая исходные изображения
     ordinary_files = [
         'text.txt',
         'english_text_low127.txt',
@@ -192,87 +244,17 @@ if __name__ == '__main__':
     ]
 
     image_pairs = [
-        ('bw_photo.jpg', 'bw_photo.jpg.myraw'),
-        ('bw_photo.png', 'bw_photo.png.myraw'),
-        ('grey_photo.jpg', 'grey_photo.jpg.myraw'),
-        ('color_photo.avif', 'color_photo.avif.myraw')
+        ('bw_photo.jpg', 'bw_photo.jpg.raw'),
+        ('bw_photo.png', 'bw_photo.png.raw'),
+        ('grey_photo.jpg', 'grey_photo.jpg.raw'),
+        ('color_photo.avif', 'color_photo.avif.raw')
     ]
 
-    MS_ORDINARY = 8
-    MC_ORDINARY = 8
-    MC_OVERRIDE = None
+    MS = 8
+    MC = 8
+    MC_override = None
 
-    print("\n--- Обычные файлы (Ms={}, Mc={}) ---".format(MS_ORDINARY, MC_ORDINARY))
-    for filename in ordinary_files:
-        if not os.path.exists(filename):
-            print("Файл {} не найден, пропускаем.".format(filename))
-        else:
-            enc_name = filename + '.rle'
-            dec_name = filename + '.dec'
-
-            encode_file(filename, enc_name, MS_ORDINARY, MC_ORDINARY)
-            decode_file(enc_name, dec_name)
-
-            f = open(filename, 'rb')
-            original = f.read()
-            f.close()
-            f = open(dec_name, 'rb')
-            recovered = f.read()
-            f.close()
-
-            if original == recovered:
-                orig_size = len(original)
-                comp_size = os.path.getsize(enc_name)
-                ratio = orig_size / comp_size if comp_size else 0
-                print("OK  {}: {} -> {} байт (коэф. {:.3f})".format(
-                    filename, orig_size, comp_size, ratio))
-            else:
-                print("FAIL {}: восстановление не совпало!".format(filename))
-
-            if os.path.exists(enc_name):
-                os.remove(enc_name)
-            if os.path.exists(dec_name):
-                os.remove(dec_name)
-
-    print("\n--- Raw-изображения (только пиксельные данные, Ms, Mc из заголовка .myraw) ---")
-    for src, raw_name in image_pairs:
-        if not os.path.exists(raw_name):
-            print("Создаём {} из {}...".format(raw_name, src))
-            if not os.path.exists(src):
-                print("Исходный файл {} не найден, пропускаем.".format(src))
-            else:
-                convert_to_myraw(src, Ms=None, Mc=16)
-                if not os.path.exists(raw_name) and os.path.exists(src + '.myraw'):
-                    os.rename(src + '.myraw', raw_name)
-
-        if not os.path.exists(raw_name):
-            print("Файл {} не найден, пропускаем.".format(raw_name))
-        else:
-            enc_name = raw_name + '.rle'
-            dec_name = raw_name + '.dec'
-
-            encode_raw_file(raw_name, enc_name, Mc_override=MC_OVERRIDE)
-            decode_raw_file(enc_name, dec_name)
-
-            f = open(raw_name, 'rb')
-            original = f.read()
-            f.close()
-            f = open(dec_name, 'rb')
-            recovered = f.read()
-            f.close()
-
-            if original == recovered:
-                orig_size = len(original)
-                comp_size = os.path.getsize(enc_name)
-                ratio = orig_size / comp_size if comp_size else 0
-                print("OK  {}: {} -> {} байт (коэф. {:.3f})".format(
-                    raw_name, orig_size, comp_size, ratio))
-            else:
-                print("FAIL {}: восстановление не совпало!".format(raw_name))
-
-            if os.path.exists(enc_name):
-                os.remove(enc_name)
-            if os.path.exists(dec_name):
-                os.remove(dec_name)
+    test_ordinary_files(ordinary_files, MS, MC)
+    test_raw_files(image_pairs, MC_override)
 
     print("\nТестирование завершено.")

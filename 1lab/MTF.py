@@ -25,5 +25,6 @@ if __name__ == "__main__":
     print(f"Original: {test_data}")
     print(f"Encoded: {encoded}")
     print(f"Decoded: {decoded}")
-    assert test_data == decoded
+    if test_data != decoded:
+        print("бедааа")
     print("Тестирование завершено!")

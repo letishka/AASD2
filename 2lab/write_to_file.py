@@ -31,17 +31,17 @@ def compress_image(img, quality=50):
     Cr = bytes(ycbcr[i] for i in range(2, len(ycbcr), 3))
 
     def encode_channel(channel_bytes, width, height):
-        #Сжимает канал и возвращает (dc_vals, ac_symbols)
+        #Сжимает канал и возвращает (dc_vals, ac_vals)
         blocks = channel_to_blocks(channel_bytes, width, height, 8)
         dc_vals = []
-        ac_symbols = []
+        ac_vals = []
         for blk in blocks:
             dct_block = dct_2d(blk)
             quant = quantize(dct_block, q_table)
             zig = zigzag_square(quant)
             dc_vals.append(zig[0])
-            ac_symbols.append(rle_vlc_encode_ac(zig[1:]))
-        return dc_vals, ac_symbols
+            ac_vals.append(rle_vlc_encode_ac(zig[1:]))
+        return dc_vals, ac_vals
 
     # Обрабатываем полную яркость
     Y_dc, Y_ac = encode_channel(Y, w, h)
@@ -58,16 +58,15 @@ def compress_image(img, quality=50):
         cb_w = cb_h = cr_w = cr_h = 0
 
     # Функция построения битового потока для набора блоков (DC+AC)
-    def build_bitstream(dc_vals, ac_symbols):
+    def build_bitstream(dc_vals, ac_vals):
         diff = diff_encode_dc(dc_vals)
         dc_vlc = vlc_encode_dc(diff)  # категории и биты
         bits = ""
         num = len(dc_vals)
         for i in range(num):
-            # DC
             cat, bits_val = dc_vlc[i]
             bits += DC_HUFFMAN[cat] + bits_val
-            for run, cat, bits_val in ac_symbols[i]:
+            for run, cat, bits_val in ac_vals[i]:
                 bits += AC_HUFFMAN[(run, cat)]
                 bits += bits_val
         return bits
@@ -212,7 +211,7 @@ def decompress_image(width, height, cb_w, cb_h, cr_w, cr_h, q_table, compressed_
 
 if __name__ == "__main__":
     img = Image.open("Lenna.png").convert('RGB')
-    comp = compress_image(img, quality=10)
+    comp = compress_image(img, quality=2)
     write_compressed_file("test.raw",
                           comp['width'], comp['height'],
                           comp['cb_width'], comp['cb_height'],

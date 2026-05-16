@@ -59,6 +59,7 @@ def lz77_decode(c):
 
     return bytes(d)
 
+
 def lzss_encode(dta, ws, ls):
     c = bytearray()
     i = 0
@@ -107,6 +108,7 @@ def lzss_encode(dta, ws, ls):
 
     return bytes(c)
 
+
 def lzss_decode(c):
     d = bytearray()
     pos = 0
@@ -132,6 +134,7 @@ def lzss_decode(c):
 
     return bytes(d)
 
+
 def lz78_encode(dta):
     dic = {}
     out = []
@@ -151,18 +154,17 @@ def lz78_encode(dta):
             idx += 1
             cur = bytearray()
 
+    # последняя фраза уже есть в словаре
     if cur:
-        prev_idx = dic.get(bytes(cur), 0)
-        out.append((prev_idx, -1))   # -1 означает "нет символа"
+        prev_idx = dic[bytes(cur)]
+        out.append((prev_idx, 0))   # фиктивный символ, будет отброшен по длине
 
     c = bytearray()
+    c.extend(len(dta).to_bytes(4, 'big'))   # исходная длина
     c.extend(len(out).to_bytes(4, 'big'))   # количество пар
     for pi, ch in out:
         c.extend(pi.to_bytes(4, 'big'))
-        if ch == -1:
-            c.append(0)      # маркер
-        else:
-            c.append(ch)
+        c.append(ch)                        # всегда реальный байт (0..255)
     return bytes(c)
 
 
@@ -194,22 +196,24 @@ def lz78_encode_limited(dta, max_dic):
             cur = bytearray()
 
     if cur:
-        prev_idx = dic.get(bytes(cur), 0)
-        out.append((prev_idx, -1))
+        prev_idx = dic[bytes(cur)]
+        out.append((prev_idx, 0))
 
     c = bytearray()
+    c.extend(len(dta).to_bytes(4, 'big'))
     c.extend(len(out).to_bytes(4, 'big'))
     for pi, ch in out:
         c.extend(pi.to_bytes(4, 'big'))
-        if ch == -1:
-            c.append(0)
-        else:
-            c.append(ch)
+        c.append(ch)
     return bytes(c)
 
 
-def lz78_decode(c):
+def lz78_decode(c, max_dic=None):
     pos = 0
+    if pos + 4 > len(c):
+        return b''
+    orig_len = int.from_bytes(c[pos:pos+4], 'big')
+    pos += 4
     if pos + 4 > len(c):
         return b''
     num_pairs = int.from_bytes(c[pos:pos+4], 'big')
@@ -229,23 +233,24 @@ def lz78_decode(c):
         ch = c[pos]
         pos += 1
 
-        if pi == 0 and ch == 0:
-            continue   # не должно встречаться, но на всякий случай
-
         if pi == 0:
-            d.append(ch)
-            dic[idx] = bytearray([ch])
+            phrase = bytearray()
         else:
-            prev = dic[pi]
-            d.extend(prev)
-            if ch != 0:          # нормальный символ
-                d.append(ch)
-                dic[idx] = prev + bytearray([ch])
-            else:                # фиктивная пара – только ссылка
-                dic[idx] = prev
+            phrase = dic[pi]
+
+        d.extend(phrase)
+        d.append(ch)
+        new_phrase = phrase + bytearray([ch])
+
+        # сброс словаря, если задан max_dic
+        if max_dic is not None and len(dic) >= max_dic:
+            dic.clear()
+            idx = 1
+        dic[idx] = new_phrase
         idx += 1
 
-    return bytes(d)
+    return bytes(d[:orig_len])
+
 
 def lzw_encode(dta, max_dic):
     dic = {bytes([i]): i for i in range(256)}
@@ -270,6 +275,7 @@ def lzw_encode(dta, max_dic):
         c.extend(code.to_bytes(2, 'big'))
     return bytes(c)
 
+
 def lzw_decode(c, max_dic=4096):
     dic = {i: bytes([i]) for i in range(256)}
     nxt = 256
@@ -293,6 +299,7 @@ def lzw_decode(c, max_dic=4096):
                 nxt += 1
             prev = code
     return bytes(d)
+
 
 if __name__ == "__main__":
     test_data = b"AAAAABBBBBCCCCCDDDDD" * 20
@@ -326,10 +333,11 @@ if __name__ == "__main__":
     print("Декодировано верно?", decomp == test_data)
     print()
 
-    # LZ78 ограниченный
+    # LZ78 с ограничением словаря 256
     print("--- LZ78 с ограничением словаря 256 ---")
-    comp = lz78_encode_limited(test_data, 256)
-    decomp = lz78_decode(comp)
+    MAX_DIC = 256
+    comp = lz78_encode_limited(test_data, MAX_DIC)
+    decomp = lz78_decode(comp, max_dic=MAX_DIC)
     ratio = len(comp) / len(test_data)
     print("Сжато:", len(comp), "байт, коэффициент:", ratio)
     print("Декодировано верно?", decomp == test_data)

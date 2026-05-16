@@ -43,6 +43,8 @@
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
@@ -56,6 +58,7 @@
     "Python.RLE.executor": "Run",
     "Python.block_BWT.executor": "Run",
     "Python.compressors.executor": "Run",
+    "Python.converterTOraw.executor": "Run",
     "Python.converter_to_raw.executor": "Run",
     "Python.experement_3.executor": "Run",
     "Python.experiments.executor": "Run",

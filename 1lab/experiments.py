@@ -33,13 +33,13 @@ def original_entropy(data):
 
 def run_entropy_experiment(files, block_sizes):
     plt.figure(figsize=(10, 6))
-    for fname in files:
-        if os.path.exists(fname):
-            f = open(fname, 'rb')
+    for filename in files:
+        if os.path.exists(filename):
+            f = open(filename, 'rb')
             data = f.read()
             f.close()
             ent_orig = original_entropy(data)
-            print(f"{fname}: исходная энтропия = {ent_orig:.4f}")
+            print(f"{filename}: исходная энтропия = {ent_orig:.4f}")
 
             ent_values = []
             for bs in block_sizes:
@@ -47,17 +47,17 @@ def run_entropy_experiment(files, block_sizes):
                 ent_values.append(ent)
                 print(f"  блок {bs:5d} -> энтропия {ent:.4f}")
 
-            plt.plot(block_sizes, ent_values, marker='o', label=fname)
+            plt.plot(block_sizes, ent_values, marker='o', label=filename)
             plt.axhline(y=ent_orig, linestyle='--', color='gray', alpha=0.5)
         else:
-            print(f"Файл {fname} не найден, пропускаем.")
+            print(f"Файл {filename} не найден, пропускаем.")
 
     plt.xlabel('Размер блока (байт)')
     plt.ylabel('Энтропия (бит на байт)')
     plt.title('Зависимость энтропии после BWT+MTF от размера блока')
     plt.legend()
     plt.grid(True)
-    plt.savefig('entropy_bwt_mtf.png')
+    plt.savefig('graph_entropy_bwt_mtf.png')
     plt.show()
 
 def lzss_ratio(data, ws, ls):
@@ -68,25 +68,25 @@ def lzss_ratio(data, ws, ls):
 
 def run_lzss_experiment(files, ws_fixed, ls_values):
     plt.figure(figsize=(10, 6))
-    for fname in files:
-        if os.path.exists(fname):
-            f = open(fname, 'rb')
+    for filename in files:
+        if os.path.exists(filename):
+            f = open(filename, 'rb')
             data = f.read()
             f.close()
             ratios = []
             for ls in ls_values:
                 r = lzss_ratio(data, ws_fixed, ls)
                 ratios.append(r)
-                print(f"{fname}, ws={ws_fixed}, ls={ls}: коэф. {r:.4f}")
-            plt.plot(ls_values, ratios, marker='o', label=fname)
+                print(f"{filename}, ws={ws_fixed}, ls={ls}: коэф. {r:.4f}")
+            plt.plot(ls_values, ratios, marker='o', label=filename)
         else:
-            print(f"Файл {fname} не найден, пропускаем.")
+            print(f"Файл {filename} не найден, пропускаем.")
     plt.xlabel('Размер буфера предварительного просмотра (байт)')
     plt.ylabel('Коэффициент сжатия')
     plt.title(f'Зависимость коэффициента сжатия LZSS от размера буфера (ws={ws_fixed})')
     plt.legend()
     plt.grid(True)
-    plt.savefig('lzss_ls.png')
+    plt.savefig('graph_lzss.png')
     plt.show()
 
 def lzw_ratio(data, max_dic):
@@ -115,7 +115,7 @@ def run_lzw_experiment(files, dict_sizes):
     plt.title('Зависимость коэффициента сжатия LZW от размера словаря')
     plt.legend()
     plt.grid(True)
-    plt.savefig('lzw_dict.png')
+    plt.savefig('graph_lzw.png')
     plt.show()
 
 if __name__ == "__main__":
@@ -130,61 +130,3 @@ if __name__ == "__main__":
 
     dict_sizes = [256, 512, 1024, 2048, 4096]
     run_lzw_experiment(test_files, dict_sizes)
-
-
-C:\Users\krota\PycharmProjects\1lab\.venv\Scripts\python.exe C:\Users\krota\Documents\GitHub\AASD2\1lab\experiments.py
-text.txt: исходная энтропия = 4.7271
-  блок    64 -> энтропия 5.5608
-  блок   128 -> энтропия 5.3603
-  блок   256 -> энтропия 5.0880
-  блок   512 -> энтропия 4.7890
-  блок  1024 -> энтропия 4.4977
-  блок  2048 -> энтропия 4.2344
-  блок  4096 -> энтропия 4.0017
-english_text_low127.txt: исходная энтропия = 4.2930
-  блок    64 -> энтропия 5.1308
-  блок   128 -> энтропия 4.8998
-  блок   256 -> энтропия 4.6206
-  блок   512 -> энтропия 4.2908
-  блок  1024 -> энтропия 4.0423
-  блок  2048 -> энтропия 4.0423
-  блок  4096 -> энтропия 4.0423
-setup.exe: исходная энтропия = 7.9322
-  блок    64 -> энтропия 7.8791
-  блок   128 -> энтропия 7.8643
-  блок   256 -> энтропия 7.8503
-  блок   512 -> энтропия 7.8393
-  блок  1024 -> энтропия 7.8317
-  блок  2048 -> энтропия 7.8271
-  блок  4096 -> энтропия 7.8228
-text.txt, ws=4096, ls=8: коэф. 1.2439
-text.txt, ws=4096, ls=16: коэф. 1.2653
-text.txt, ws=4096, ls=32: коэф. 1.2665
-text.txt, ws=4096, ls=64: коэф. 1.2665
-text.txt, ws=4096, ls=128: коэф. 1.2665
-text.txt, ws=4096, ls=256: коэф. 1.2665
-english_text_low127.txt, ws=4096, ls=8: коэф. 1.0481
-english_text_low127.txt, ws=4096, ls=16: коэф. 1.0553
-english_text_low127.txt, ws=4096, ls=32: коэф. 1.0553
-english_text_low127.txt, ws=4096, ls=64: коэф. 1.0553
-english_text_low127.txt, ws=4096, ls=128: коэф. 1.0553
-english_text_low127.txt, ws=4096, ls=256: коэф. 1.0553
-setup.exe, ws=4096, ls=8: коэф. 0.9273
-setup.exe, ws=4096, ls=16: коэф. 0.9347
-setup.exe, ws=4096, ls=32: коэф. 0.9377
-setup.exe, ws=4096, ls=64: коэф. 0.9388
-setup.exe, ws=4096, ls=128: коэф. 0.9393
-Traceback (most recent call last):
-  File "C:\Users\krota\Documents\GitHub\AASD2\1lab\experiments.py", line 129, in <module>
-    run_lzss_experiment(test_files, ws_fixed, ls_values)
-    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\krota\Documents\GitHub\AASD2\1lab\experiments.py", line 78, in run_lzss_experiment
-    r = lzss_ratio(data, ws_fixed, ls)
-  File "C:\Users\krota\Documents\GitHub\AASD2\1lab\experiments.py", line 64, in lzss_ratio
-    comp = lzss_encode(data, ws, ls)
-  File "C:\Users\krota\Documents\GitHub\AASD2\1lab\LZ.py", line 104, in lzss_encode
-    c.append(tok[2])
-    ~~~~~~~~^^^^^^^^
-ValueError: byte must be in range(0, 256)
-
-Process finished with exit code 1
