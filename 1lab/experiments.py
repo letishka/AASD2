@@ -47,8 +47,11 @@ def run_entropy_experiment(files, block_sizes):
                 ent_values.append(ent)
                 print(f"  блок {bs:5d} -> энтропия {ent:.4f}")
 
-            plt.plot(block_sizes, ent_values, marker='o', label=filename)
-            plt.axhline(y=ent_orig, linestyle='--', color='gray', alpha=0.5)
+            # Строим кривую, сохраняем объект линии для получения цвета
+            line, = plt.plot(block_sizes, ent_values, marker='o', label=filename)
+            # Горизонтальная линия исходной энтропии того же цвета
+            plt.axhline(y=ent_orig, linestyle='--', color=line.get_color(),
+                        alpha=0.5, label=f'{filename} (исх.)')
         else:
             print(f"Файл {filename} не найден, пропускаем.")
 
@@ -119,7 +122,8 @@ def run_lzw_experiment(files, dict_sizes):
     plt.show()
 
 if __name__ == "__main__":
-    test_files = ['text.txt', 'english_text_low127.txt', 'setup.exe']
+    test_files = ['text.txt', 'english_text_low127.txt', 'setup.exe', 'color_photo.avif', 'bw_photo.jpg.raw', 'bw_photo.png',
+                  'grey_photo.jpg', 'bw_photo.png.raw', 'color_photo.avif.raw', 'grey_photo.jpg.raw', 'bw_photo.jpg', 'enwik7']
 
     block_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
     run_entropy_experiment(test_files, block_sizes)

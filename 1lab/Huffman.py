@@ -1,6 +1,4 @@
 def build_canonical_codes(code_lengths):
-    # Вход: {символ: длина_кода}
-    # Возвращает: {символ: строка_битов}
     items = sorted(code_lengths.items(), key=lambda x: (x[1], x[0]))
     codes = {}
     cur_code = 0
@@ -15,8 +13,6 @@ def build_canonical_codes(code_lengths):
     return codes
 
 def huffman_encode_canonical(data):
-    # data: байты
-    # Возвращает (сжатые_данные, {символ: длина_кода}, добавленные_биты)
     if not data:
         return b"", {}, 0
 
@@ -24,7 +20,6 @@ def huffman_encode_canonical(data):
     for b in data:
         freq[b] = freq.get(b, 0) + 1
 
-    # Построение дерева Хаффмана
     nodes = [[f, c, None, None] for c, f in freq.items()]
     while len(nodes) > 1:
         nodes.sort(key=lambda x: x[0])
@@ -33,25 +28,22 @@ def huffman_encode_canonical(data):
         nodes.append([left[0] + right[0], None, left, right])
     root = nodes[0]
 
-    # Получение длин кодов обходом в глубину
     code_lengths = {}
     stack = [(root, 0)]
     while stack:
         node, depth = stack.pop()
-        if node[1] is not None:          # лист
+        if node[1] is not None:
             code_lengths[node[1]] = depth
         else:
             stack.append((node[2], depth + 1))
             stack.append((node[3], depth + 1))
 
-    # Единственный уникальный символ: принудительная длина 1
     if len(code_lengths) == 1:
         ch = next(iter(code_lengths))
         code_lengths[ch] = 1
 
     codes = build_canonical_codes(code_lengths)
 
-    # Кодирование
     bits = "".join(codes[b] for b in data)
     pad = (8 - len(bits) % 8) % 8
     bits += "0" * pad
@@ -74,8 +66,6 @@ def huffman_decode_canonical(enc, codes, pad):
     return bytes(res)
 
 def pack_huffman(enc, code_lengths, pad):
-    # Формат: pad(1), количество_символов(2),
-    # для каждого: символ(1), длина_кода(1), потом сжатые данные.
     out = bytearray()
     out.append(pad)
     out.extend(len(code_lengths).to_bytes(2, 'big'))
@@ -84,7 +74,6 @@ def pack_huffman(enc, code_lengths, pad):
         out.append(length)
     out.extend(enc)
     return bytes(out)
-
 
 def unpack_huffman(data):
     if len(data) < 3:
@@ -103,31 +92,38 @@ def unpack_huffman(data):
     enc = data[pos:]
     return enc, code_lengths, pad
 
-# Cжатие и распаковка одной байтовой строки
-def huffman_compress(data):
-    enc, code_lengths, pad = huffman_encode_canonical(data)
-    return pack_huffman(enc, code_lengths, pad)
-
-def huffman_decompress(compressed):
-    enc, code_lengths, pad = unpack_huffman(compressed)
-    codes = build_canonical_codes(code_lengths)
-    return huffman_decode_canonical(enc, codes, pad)
-
 if __name__ == "__main__":
+    # тест "abracadabra"
     test_data = b"abracadabra"
-    print(test_data)
-    compressed = huffman_compress(test_data)
-    decompressed = huffman_decompress(compressed)
-    if decompressed == test_data:
-        print("OK\n")
-    else:
-        print("ERROR\n")
+    enc, lens, pad = huffman_encode_canonical(test_data)
+    compressed = pack_huffman(enc, lens, pad)
+    unpacked_enc, unpacked_lens, unpacked_pad = unpack_huffman(compressed)
+    codes = build_canonical_codes(unpacked_lens)
+    decompressed = huffman_decode_canonical(unpacked_enc, codes, unpacked_pad)
+    if decompressed == test_data: print("abracadabra OK")
+    else: print("abracadabra ERROR")
 
+    # тест одного символа
     single_data = b"aaaa"
-    print(single_data)
-    comp_single = huffman_compress(single_data)
-    decomp_single = huffman_decompress(comp_single)
-    if decomp_single == single_data:
-        print("OK\n")
-    else:
-        print("ERROR\n")
+    enc, lens, pad = huffman_encode_canonical(single_data)
+    compressed = pack_huffman(enc, lens, pad)
+    unpacked_enc, unpacked_lens, unpacked_pad = unpack_huffman(compressed)
+    codes = build_canonical_codes(unpacked_lens)
+    decompressed = huffman_decode_canonical(unpacked_enc, codes, unpacked_pad)
+    if decompressed == single_data: print("aaaa OK")
+    else: print("aaaa ERROR")
+
+    # работа с файлом
+    f = open("text.txt", "rb")
+    original = f.read()
+    enc_t, lens_t, pad_t = huffman_encode_canonical(original)
+    packed_t = pack_huffman(enc_t, lens_t, pad_t)
+    f = open("test_compressed.bin", "wb")
+    f.write(packed_t)
+    f = open("test_compressed.bin", "rb")
+    loaded = f.read()
+    unpacked_enc_t, unpacked_lens_t, unpacked_pad_t = unpack_huffman(loaded)
+    codes_t = build_canonical_codes(unpacked_lens_t)
+    restored = huffman_decode_canonical(unpacked_enc_t, codes_t, unpacked_pad_t)
+    if restored == original: print("test.txt OK")
+    else: print("test.txt ERROR")

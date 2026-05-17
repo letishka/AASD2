@@ -175,17 +175,19 @@ def test_compressor(name, compress_func, decompress_func, data):
     return len(compressed), len(decompressed), ok
 
 def run_tests(test_files):
-    # Список компрессоров – только ссылки на реальные функции
     compressors = [
-        ("RLE",               partial(RLE, max_count=RLE_MC, min_skip=RLE_MS),   RLD),
-        ("HA",                ha_compress,                                        ha_decompress),
-        ("BWT+RLE",           partial(bwt_rle_compress, block_size=BWT_BLOCK),     partial(bwt_rle_decompress, block_size=BWT_BLOCK)),
-        ("BWT+MTF+HA",        partial(bwt_mtf_ha_compress, block_size=BWT_BLOCK),  partial(bwt_mtf_ha_decompress, block_size=BWT_BLOCK)),
-        ("BWT+MTF+RLE+HA",    partial(bwt_mtf_rle_ha_compress, block_size=BWT_BLOCK), partial(bwt_mtf_rle_ha_decompress, block_size=BWT_BLOCK)),
-        ("LZSS",              partial(lzss_encode, window_size=LZSS_WS, lookahead_size=LZSS_LS), lzss_decode),
-        ("LZSS+HA",           lambda d: ha_compress(lzss_encode(d, LZSS_WS, LZSS_LS)), lambda d: lzss_decode(ha_decompress(d))),
-        ("LZW",               partial(lzw_encode, max_dict_size=LZW_MAX_DIC),      partial(lzw_decode, max_dict_size=LZW_MAX_DIC)),
-        ("LZW+HA",            lambda d: ha_compress(lzw_encode(d, LZW_MAX_DIC)),   lambda d: lzw_decode(ha_decompress(d), LZW_MAX_DIC)),
+        ("RLE", lambda d: RLE(d, RLE_MC, RLE_MS), lambda d: RLD(d, RLE_MC, RLE_MS)),
+        ("HA", ha_compress, ha_decompress),
+        ("BWT+RLE", partial(bwt_rle_compress, block_size=BWT_BLOCK), partial(bwt_rle_decompress, block_size=BWT_BLOCK)),
+        ("BWT+MTF+HA", partial(bwt_mtf_ha_compress, block_size=BWT_BLOCK),
+         partial(bwt_mtf_ha_decompress, block_size=BWT_BLOCK)),
+        ("BWT+MTF+RLE+HA", partial(bwt_mtf_rle_ha_compress, block_size=BWT_BLOCK),
+         partial(bwt_mtf_rle_ha_decompress, block_size=BWT_BLOCK)),
+        ("LZSS", lambda d: lzss_encode(d, LZSS_WS, LZSS_LS), lzss_decode),
+        ("LZSS+HA", lambda d: ha_compress(lzss_encode(d, LZSS_WS, LZSS_LS)), lambda d: lzss_decode(ha_decompress(d))),
+        ("LZW", lambda d: lzw_encode(d, LZW_MAX_DIC), lambda d: lzw_decode(d, LZW_MAX_DIC)),
+        ("LZW+HA", lambda d: ha_compress(lzw_encode(d, LZW_MAX_DIC)),
+         lambda d: lzw_decode(ha_decompress(d), LZW_MAX_DIC)),
     ]
 
     results = []
@@ -207,37 +209,21 @@ def run_tests(test_files):
         results.append(row)
     return results
 
-def print_table(results, compressors):
-    print("\n=== Сводная таблица ===")
-    header = ["Файл", "Исх. (байт)"]
-    for name, _, _ in compressors:
-        header.append(name + " (сжат)")
-        header.append(name + " (коэф)")
-    print("\t".join(header))
-    for row in results:
-        line = [row['file'], str(row['original'])]
-        for name, _, _ in compressors:
-            comp_size, decomp_size, ratio, ok = row[name]
-            if ok:
-                line.append(str(comp_size))
-                line.append("%.3f" % ratio)
-            else:
-                line.append("FAIL")
-                line.append("FAIL")
-        print("\t".join(line))
-
 if __name__ == "__main__":
-    test_files = [
-        'text.txt',
-        'english_text_low127.txt',
-        'setup.exe',
-        'bw_photo.jpg',
-        'bw_photo.png',
-        'grey_photo.jpg',
-        'color_photo.avif'
-    ]
+    test_files = [#'text.txt',
+                  #'english_text_low127.txt',
+                  #'setup.exe',
+                  #'color_photo.avif',
+                  #'bw_photo.jpg.raw',
+                  #'bw_photo.png',
+                  #'grey_photo.jpg',
+                  #'bw_photo.png.raw',
+                  'color_photo.avif.raw',
+                  'grey_photo.jpg.raw',
+                  #'bw_photo.jpg',
+                  'enwik7']
 
-    # compressors – только для вывода таблицы (без функций)
+    # compressors для вывода таблицы
     compressors_info = [
         ("RLE", None, None),
         ("HA", None, None),
@@ -249,5 +235,4 @@ if __name__ == "__main__":
         ("LZW", None, None),
         ("LZW+HA", None, None),
     ]
-    results = run_tests(test_files)
-    print_table(results, compressors_info)
+    run_tests(test_files)

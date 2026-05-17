@@ -1,5 +1,4 @@
 import os
-from converterTOraw import convert_to_raw
 
 def RLE(string: bytes, Mc: int, Ms: int) -> bytes:
     max_len = (1 << (Mc - 1)) - 1
@@ -80,7 +79,7 @@ def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
 
     return bytes(rld_string[:original_len])
 
-def read_rle_header(filepath):
+def read_header(filepath):
     with open(filepath, 'rb') as f:
         data = f.read()
     if len(data) < 4:
@@ -113,56 +112,7 @@ def decode_file(input_path, output_path):
     with open(output_path, 'wb') as f:
         f.write(decoded)
 
-def read_raw_header(filepath):
-    with open(filepath, 'rb') as f:
-        header = f.read(5)
-    if len(header) != 5:
-        print("Ошибка: некорректный raw-файл (не хватает заголовка)")
-        return None, None, None, None
-    img_type = header[0]
-    Ms = int.from_bytes(header[1:3], 'little')
-    Mc = int.from_bytes(header[3:5], 'little')
-    data_offset = 5
-    return img_type, Ms, Mc, data_offset
-
-def encode_raw_file(input_path, output_path, Mc_override=None):
-    img_type, Ms, Mc, offset = read_raw_header(input_path)
-    if img_type is None:
-        return
-    if Mc_override is not None:
-        Mc = Mc_override
-
-    with open(input_path, 'rb') as f:
-        f.seek(offset)
-        pixel_data = f.read()
-
-    encoded = RLE(pixel_data, Mc, Ms)
-
-    with open(output_path, 'wb') as f_out:
-        f_out.write(Ms.to_bytes(2, 'big'))
-        f_out.write(Mc.to_bytes(2, 'big'))
-        with open(input_path, 'rb') as f_in:
-            raw_header = f_in.read(5)
-        f_out.write(raw_header)
-        f_out.write(encoded)
-
-def decode_raw_file(input_path, output_path):
-    Ms, Mc, rest = read_rle_header(input_path)
-    if Ms is None:
-        return
-    if len(rest) < 5:
-        print("Ошибка: отсутствует raw-заголовок")
-        return
-    raw_header = rest[:5]
-    encoded = rest[5:]
-
-    decoded_pixel = RLD(encoded, Mc, Ms)
-
-    with open(output_path, 'wb') as f:
-        f.write(raw_header)
-        f.write(decoded_pixel)
-
-def test_ordinary_files(files, MS, MC):
+def test(files, MS, MC):
     print(f"\n--- Обычные файлы (Ms={MS}, Mc={MC}) ---")
     for filename in files:
         if not os.path.exists(filename):
@@ -192,46 +142,6 @@ def test_ordinary_files(files, MS, MC):
             if os.path.exists(tmp):
                 os.remove(tmp)
 
-def test_raw_files(image_pairs, MC_override):
-    print("\n--- Raw-изображения (только пиксельные данные, Ms, Mc из заголовка .raw) ---")
-    for src, raw_name in image_pairs:
-        if not os.path.exists(raw_name):
-            if not os.path.exists(src):
-                print(f"Исходный файл {src} не найден, пропускаем.")
-                continue
-            print(f"Создаём {raw_name} из {src}...")
-            convert_to_raw(src, Ms=None, Mc=16)
-            generated = src + '.raw'
-            if os.path.exists(generated) and not os.path.exists(raw_name):
-                os.rename(generated, raw_name)
-
-        if not os.path.exists(raw_name):
-            print(f"Файл {raw_name} не найден, пропускаем.")
-            continue
-
-        enc_name = raw_name + '.rle'
-        dec_name = raw_name + '.dec'
-
-        encode_raw_file(raw_name, enc_name, Mc_override=MC_override)
-        decode_raw_file(enc_name, dec_name)
-
-        with open(raw_name, 'rb') as f:
-            original = f.read()
-        with open(dec_name, 'rb') as f:
-            recovered = f.read()
-
-        if original == recovered:
-            orig_size = len(original)
-            comp_size = os.path.getsize(enc_name)
-            ratio = orig_size / comp_size if comp_size else 0
-            print(f"OK  {raw_name}: {orig_size} -> {comp_size} байт (коэф. {ratio:.3f})")
-        else:
-            print(f"FAIL {raw_name}: восстановление не совпало!")
-
-        for tmp in (enc_name, dec_name):
-            if os.path.exists(tmp):
-                os.remove(tmp)
-
 if __name__ == '__main__':
     ordinary_files = [
         'text.txt',
@@ -240,21 +150,14 @@ if __name__ == '__main__':
         'bw_photo.jpg',
         'bw_photo.png',
         'grey_photo.jpg',
-        'color_photo.avif'
-    ]
-
-    image_pairs = [
-        ('bw_photo.jpg', 'bw_photo.jpg.raw'),
-        ('bw_photo.png', 'bw_photo.png.raw'),
-        ('grey_photo.jpg', 'grey_photo.jpg.raw'),
-        ('color_photo.avif', 'color_photo.avif.raw')
-    ]
-
+        'color_photo.avif',
+        'bw_photo.jpg.raw',
+        'bw_photo.png.raw',
+        'grey_photo.jpg.raw',
+        'color_photo.avif.raw']
     MS = 8
     MC = 8
     MC_override = None
 
-    test_ordinary_files(ordinary_files, MS, MC)
-    test_raw_files(image_pairs, MC_override)
-
+    test(ordinary_files, MS, MC)
     print("\nТестирование завершено.")
