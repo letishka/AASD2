@@ -37,10 +37,9 @@ def ibwt_fast(L, k):
         p[ch] += 1
 
     r = bytearray()
-    j = k
     for _ in range(n):
-        j = nxt[j]
-        r.append(L[j])
+        k = nxt[k]
+        r.append(L[k])
     return bytes(r)
 
 def block_bwt(s, block_size=None):
