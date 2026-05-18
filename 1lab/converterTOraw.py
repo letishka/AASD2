@@ -2,7 +2,6 @@ import os
 import struct
 from PIL import Image
 
-
 def pack_bits(pixels):
     # Упаковывает список пикселей (значения 0 или 255) в байты.
     # Каждый байт содержит до 8 бит: первый пиксель попадает в старший бит.
@@ -17,7 +16,6 @@ def pack_bits(pixels):
                 byte |= 1 << (7 - j)
         data.append(byte)
     return bytes(data)
-
 
 def convert_to_raw(file_way, ms=None, mc=None):
     # Заголовок (5 байт):
@@ -57,10 +55,8 @@ def convert_to_raw(file_way, ms=None, mc=None):
     # Формируем заголовок: тип (1) + ms (2) + mc (2) = 5 байт
     header = struct.pack('<BHH', img_type, ms, mc)
 
-    with open(f'{file_way}.raw', 'wb') as f:
-        f.write(header)
-        f.write(data)
-
+    f = open(f'{file_way}.raw', 'wb')
+    f.write(header).write(data)
 
 def compare(file_way):
     # Сравнивает размер исходного изображения и полученного .raw.
@@ -68,7 +64,6 @@ def compare(file_way):
     print(f"  Исходный размер: {os.path.getsize(file_way)} байт")
     print(f"  Raw размер:      {os.path.getsize(f'{file_way}.raw')} байт")
     print(f"  Коэф. сжатия (исх/raw): {os.path.getsize(file_way) / os.path.getsize(f'{file_way}.raw'):.3f}\n")
-
 
 if __name__ == '__main__':
     # Пример использования – можно задать Ms и Mc явно

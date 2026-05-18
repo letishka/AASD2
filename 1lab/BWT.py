@@ -30,12 +30,11 @@ def ibwt_fast(L, k):
         p[i] = s
         s += f[i]
 
-    c = p[:]
     nxt = [0] * n
     for i in range(n):
         ch = L[i]
-        nxt[c[ch]] = i
-        c[ch] += 1
+        nxt[p[ch]] = i
+        p[ch] += 1
 
     r = bytearray()
     j = k
@@ -82,14 +81,6 @@ def block_ibwt_fast(L, k, block_size=None):
         result.extend(dec_blk)
     return bytes(result)
 
-def bwt_last_column(s, sa):
-    n = len(s)
-    L = bytearray()
-    for i in sa:
-        pos = (i - 1) % n
-        L.append(s[pos])
-    return bytes(L)
-
 def bwt_sa(s):
     n = len(s)
     if n == 0: return b"", 0
@@ -118,16 +109,16 @@ if __name__ == "__main__":
         exit(1)
 
     # text.txt (russian)
-    with open("text.txt", "rb") as f:
-        text_data = f.read()
+    f = open("text.txt", "rb")
+    text_data = f.read()
     Lb2, _ = block_bwt(text_data, block_size=4096)
     if block_ibwt_fast(Lb2, 0, block_size=4096) != text_data:
         print("ERROR: text.txt")
         exit(1)
 
     # enwik7
-    with open("enwik7", "rb") as f:
-        enwik_data = f.read()
+    f = open("enwik7", "rb")
+    enwik_data = f.read()
     Lb3, _ = block_bwt(enwik_data, block_size=5000)
     if block_ibwt_fast(Lb3, 0, block_size=5000) != enwik_data:
         print("ERROR: enwik7")

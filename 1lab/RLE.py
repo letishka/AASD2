@@ -80,8 +80,8 @@ def RLD(string: bytes, Mc: int, Ms: int) -> bytes:
     return bytes(rld_string[:original_len])
 
 def read_header(filepath):
-    with open(filepath, 'rb') as f:
-        data = f.read()
+    f = open(filepath, 'rb')
+    data = f.read()
     if len(data) < 4:
         print("Ошибка: некорректный RLE-файл (недостаточно заголовка)")
         return None, None, None
@@ -94,23 +94,23 @@ def encode_file(input_path, output_path, Ms, Mc):
     if Ms % 8 != 0 or Mc % 8 != 0:
         print("Ошибка: Ms и Mc должны быть кратны 8")
         return
-    with open(input_path, 'rb') as f:
-        data = f.read()
+    f = open(input_path, 'rb')
+    data = f.read()
     encoded = RLE(data, Mc, Ms)
     header = Ms.to_bytes(2, 'big') + Mc.to_bytes(2, 'big')
-    with open(output_path, 'wb') as f:
-        f.write(header + encoded)
+    f = open(output_path, 'wb')
+    f.write(header + encoded)
 
 def decode_file(input_path, output_path):
-    Ms, Mc, encoded = read_rle_header(input_path)
+    Ms, Mc, encoded = read_header(input_path)
     if Ms is None:
         return
     if Ms % 8 != 0 or Mc % 8 != 0:
         print("Ошибка: Ms и Mc должны быть кратны 8")
         return
     decoded = RLD(encoded, Mc, Ms)
-    with open(output_path, 'wb') as f:
-        f.write(decoded)
+    f = open(output_path, 'wb')
+    f.write(decoded)
 
 def test(files, MS, MC):
     print(f"\n--- Обычные файлы (Ms={MS}, Mc={MC}) ---")
@@ -125,10 +125,10 @@ def test(files, MS, MC):
         encode_file(filename, enc_name, MS, MC)
         decode_file(enc_name, dec_name)
 
-        with open(filename, 'rb') as f:
-            original = f.read()
-        with open(dec_name, 'rb') as f:
-            recovered = f.read()
+        f = open(filename, 'rb')
+        original = f.read()
+        f = open(dec_name, 'rb')
+        recovered = f.read()
 
         if original == recovered:
             orig_size = len(original)

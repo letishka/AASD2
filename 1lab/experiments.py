@@ -122,11 +122,21 @@ def run_lzw_experiment(files, dict_sizes):
     plt.show()
 
 if __name__ == "__main__":
-    test_files = ['text.txt', 'english_text_low127.txt', 'setup.exe', 'color_photo.avif', 'bw_photo.jpg.raw', 'bw_photo.png',
-                  'grey_photo.jpg', 'bw_photo.png.raw', 'color_photo.avif.raw', 'grey_photo.jpg.raw', 'bw_photo.jpg', 'enwik7']
+    test_files = ['text.txt',
+                  'english_text_low127.txt',
+                  'setup.exe',
+                  'color_photo.avif',
+                  #'bw_photo.jpg.raw',
+                  'bw_photo.png',
+                  'grey_photo.jpg',
+                  #'bw_photo.png.raw',
+                  #'color_photo.avif.raw',
+                  #'grey_photo.jpg.raw',
+                  #'bw_photo.jpg',
+                  'enwik7']
 
     block_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    run_entropy_experiment(test_files, block_sizes)
+    #run_entropy_experiment(test_files, block_sizes)
 
     ws_fixed = 4096
     ls_values = [8, 16, 32, 64, 128, 256]

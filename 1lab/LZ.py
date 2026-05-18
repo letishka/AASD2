@@ -102,7 +102,7 @@ def lzss_encode(dta, ws, ls):
                     c.append(tok[1])
                 else:
                     c.extend(tok[1].to_bytes(2, 'big'))
-                    c.append(tok[2])
+                    c.extend(tok[2].to_bytes(2, 'big'))
 
             toks = []
 
@@ -118,12 +118,12 @@ def lzss_decode(c):
         bit = 0
         while bit < 8 and pos < len(c):
             if (flags >> bit) & 1:
-                if pos + 2 >= len(c):
+                if pos + 4 > len(c):
                     break
-                off = int.from_bytes(c[pos:pos+2], 'big')
+                off = int.from_bytes(c[pos:pos + 2], 'big')
                 pos += 2
-                ln = c[pos]
-                pos += 1
+                ln = int.from_bytes(c[pos:pos + 2], 'big')
+                pos += 2
                 start = len(d) - off
                 for _ in range(ln):
                     d.append(d[start + _])

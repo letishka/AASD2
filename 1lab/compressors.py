@@ -195,8 +195,8 @@ def run_tests(test_files):
         if not os.path.exists(fname):
             print("Файл %s не найден, пропускаем." % fname)
             continue
-        with open(fname, 'rb') as f:
-            data = f.read()
+        f = open(fname, 'rb')
+        data = f.read()
         orig_size = len(data)
         print("\n--- %s (исх. %d байт) ---" % (fname, orig_size))
         row = {'file': fname, 'original': orig_size}
@@ -210,17 +210,17 @@ def run_tests(test_files):
     return results
 
 if __name__ == "__main__":
-    test_files = [#'text.txt',
-                  #'english_text_low127.txt',
-                  #'setup.exe',
-                  #'color_photo.avif',
-                  #'bw_photo.jpg.raw',
-                  #'bw_photo.png',
-                  #'grey_photo.jpg',
-                  #'bw_photo.png.raw',
+    test_files = ['text.txt',
+                  'english_text_low127.txt',
+                  'setup.exe',
+                  'color_photo.avif',
+                  'bw_photo.jpg.raw',
+                  'bw_photo.png',
+                  'grey_photo.jpg',
+                  'bw_photo.png.raw',
                   'color_photo.avif.raw',
                   'grey_photo.jpg.raw',
-                  #'bw_photo.jpg',
+                  'bw_photo.jpg',
                   'enwik7']
 
     # compressors для вывода таблицы
